@@ -1,0 +1,7 @@
+.metadata/
+.recommenders/
+RemoteSystemsTempFiles/
+Simanneal/.classpath
+Simanneal/.project
+Simanneal/.settings/org.eclipse.jdt.core.prefs
+**/*.class
