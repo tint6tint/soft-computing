@@ -1,10 +1,17 @@
-import java.util.Iterator;
-import java.util.LinkedHashSet;
+
+import java.math.BigDecimal;
 import java.util.Random;
-import java.util.Set;
+
 
 public class BinaryCodedGeneticAlgorithm {
-	int N = 30;
+	public final static int N = 30;
+	public final static int row=20;
+	public final static int column=20;
+	public final static int numberOfParameters=2;
+	public final static double lowerBoundry=0;
+	public final static double upperBoundry=5;
+	public final static int precision=5;
+	
 
 	public BinaryCodedGeneticAlgorithm() {
 		// TODO Auto-generated constructor stub
@@ -15,90 +22,151 @@ public class BinaryCodedGeneticAlgorithm {
 		int binaryNumberDesired = rand.nextInt(2);
 		return binaryNumberDesired;
 	}
-	int[][] decodedValueOfFunction(int[][] doubleArray){
-		int[][] result = new int[6][2];
+	
+	public int[][] generateMatingPool() {
+		int[][] arrayOfBinaryCode = new int[row][column];
 		int i, j;
-		int[] dv= {4,2,1};
-		for (i = 0; i < 6; i++) {
+		for (i = 0; i < row; i++) {
+			for (j = 0; j < column; j++) {
+				arrayOfBinaryCode[i][j] = randomBinaryNumber();
+			}
+		}
+		return arrayOfBinaryCode;
+	}
+	public int[][] decodedValueOfParameters(int[][] doubleArray){
+		int[][] result = new int[row][numberOfParameters];
+		int i, j;
+		int[] dv= {712,356,128,64,32,16,8,4,2,1};
+		for (i = 0; i < row; i++) {
 			int temp1=0;
-			for (j = 0; j < 3; j++) {				
-				temp1+=dv[j]*doubleArray[i][j];
+			int n = 0,m=0;
+			for (j = 0; j < column/numberOfParameters; j++) {				
+				temp1+=dv[n]*doubleArray[i][j];
+				n++;
 			}
 			result[i][0]=temp1;
 			int temp2=0;
-			for (j = 3; j < 6; j++) {
-				temp2+=dv[j]*doubleArray[i][j];
+			for (j = column/numberOfParameters; j < column; j++) {
+				temp2+=dv[m]*doubleArray[i][j];
+				m++;
 			}
 			result[i][1]=temp2;			
 		}
 		return result;
 	}
-	double[] returnValueOfFunction(int[][] decodedValue){
-		double result[]=new double[6];
-		int i=0;
-		for (i = 0; i < 6; i++) {
-			int valueOfXOne=decodedValue[i][0];
-			int valueOfXTwo=decodedValue[i][1];
-			result[i]=valueOfXOne+valueOfXTwo-2*Math.pow(valueOfXOne, 2)-2*Math.pow(valueOfXTwo, 2);
+	public double[][] returnFinalDecodedValuesOfParameters(int[][] decodedValues){
+		double[][] result = new double[row][numberOfParameters];
+		int power=column/numberOfParameters;
+		for(int i = 0; i < row; i++) {
+			result[i][0]=(lowerBoundry+(upperBoundry-lowerBoundry)*decodedValues[i][0])/Math.pow(2, power);
+			result[i][1]=(lowerBoundry+(upperBoundry-lowerBoundry)*decodedValues[i][1])/Math.pow(2, power);
+			
 		}
 		return result;
 	}
-	double[] returnValueOfCapitalFunction(double[] lowerCaseFValue){
-		double result[]=new double[6];
+	public double[] returnValueOfFunction(double[][] finalDecodedValuesOfParameters){
+		double result[]=new double[row];
 		int i=0;
-		for (i = 0; i < 6; i++) {
+		for (i = 0; i < finalDecodedValuesOfParameters.length; i++) {
+			double valueOfXOne=finalDecodedValuesOfParameters[i][0];
+			double valueOfXTwo=finalDecodedValuesOfParameters[i][1];
+			//result[i]=(valueOfXOne+valueOfXTwo)-2*Math.pow(valueOfXOne, 2)-2*Math.pow(valueOfXTwo, 2);
+			double powerTwoOfOne= Math.pow(valueOfXOne, 2);
+			double powerTwoOfTwo= Math.pow(valueOfXTwo, 2);
+			double firstPart=Math.pow((powerTwoOfOne+valueOfXTwo-11),2);
+			double secondPart= Math.pow((valueOfXOne+powerTwoOfTwo-7), 2);
+			result[i]=firstPart+secondPart;
+		}
+		
+		return result;
+	}
+	public double[] returnValueOfCapitalFunction(double[] lowerCaseFValue){
+		double result[]=new double[row];
+		int i=0;
+		for (i = 0; i < row; i++) {
 			double temp;
 			temp=1/(1+lowerCaseFValue[i]);
 			result[i]=temp;
 		}
 		return result;
 	}
-	double returnAverageValueOfCapitalFunction(double[] capitalFunctionValue){
+	public double returnAverageValueOfCapitalFunction(double[] capitalFunctionValue){
 		double result;
 		int i=0;
 		double temp=0;
-		for (i = 0; i < 6; i++) {			
+		for (i = 0; i < capitalFunctionValue.length; i++) {			
 			temp+=capitalFunctionValue[i];
 		}
-		result=temp/20;
+		result=temp/row;
 		return result;
 	}
-	double[] returnValueOfA(int[] decodedValue, double averageFitness){
-		double result[]=new double[6];
+	public double[] returnValueOfA(double[] decodedValue, double averageFitness){
+		double result[]=new double[row];
+		int i=0;	
+		for (i = 0; i < decodedValue.length; i++) {
+			double temp;
+			temp=decodedValue[i]/averageFitness;
+			result[i]=temp;
+		}
 		return result;
 	}
-	double[] returnValueOfB(int[][] decodedValue){
-		double result[]=new double[6];
+	public double[] returnValueOfB(double[] valueOfA){
+		double result[]=new double[row];
+		int i=0;
+		
+		for (i = 0; i < valueOfA.length; i++) {
+			double temp;
+			temp=valueOfA[i]/row;
+			result[i]=temp;
+		}
 		return result;
 	}
-	double[] returnValueOfC(int[][] decodedValue){
-		double result[]=new double[6];
+	public double[] returnValueOfC(double[] valueOfB){
+		double result[]=new double[row];
+		double temp=0;
+		for (int i = 0; i < valueOfB.length; i++) {		
+			temp+=valueOfB[i];
+			result[i]=temp;
+		}
 		return result;
 	}
-	double[] returnValueOfD(int[][] decodedValue){
-		double result[]=new double[6];
+	public double[] returnValueOfD(){
+		double result[]=new double[row];
+		Random randDoubleValue= new Random();
+		for (int i = 0; i < result.length; i++) {					
+			result[i]= randDoubleValue.nextDouble();
+		}
 		return result;
 	}
-	double[] returnValueOfE(int[][] decodedValue){
-		double result[]=new double[6];
+	public int[] returnValueOfE(double[] valueOfD, double[] valueOfC){
+		int result[]=new int[row];
+		for(int i=0; i<valueOfD.length; i++){
+			for(int b=0;b<valueOfC.length;b++){
+				if(valueOfD[i]>=valueOfC[b]){
+					continue;
+				}else{
+					result[i]=b;
+					break;
+				}
+			}
+		}		
 		return result;
 	}
-	double[] returnValueOfF(int[][] decodedValue){
-		double result[]=new double[6];
-		return result;
-	}
-	public int[][] generateMatingPool() {
-		int[][] arrayOfBinaryCode = new int[6][6];
-		int i, j;
-		for (i = 0; i < 6; i++) {
-			for (j = 0; j < 6; j++) {
-				arrayOfBinaryCode[i][j] = randomBinaryNumber();
+	public int[] returnValueOfF(int[] valueOfE){
+		int result[]=new int[row];
+		for(int i=0; i<row; i++){
+			int temp=0;
+			for(int b=0;b<valueOfE.length;b++){
+				if(i==valueOfE[b]){
+					temp++;
+				}else{}
+				result[i]=temp;
+				
 			}
 		}
-		return arrayOfBinaryCode;
+		return result;
 	}
-
-	public Set<Integer> matingPair() {
+	/*public Set<Integer> matingPair() {
 		Random rand = new Random();
 		Set<Integer> generated = new LinkedHashSet<Integer>();
 		while (generated.size() < 6) {
@@ -133,7 +201,17 @@ public class BinaryCodedGeneticAlgorithm {
 		} while (i < 3);
 		swap(parents, copy,j, i);				
 		return parents;
+	}*/
+	public int[][] generateParents(int[][] mattingPool, int[] valueOfE) {
+		int[][] parents = new int[row][column];
+		int[][] copy= copyArray(mattingPool);
+		for(int i=0; i<copy.length;i++){
+			parents[i]=copy[valueOfE[i]];
+		}
+						
+		return parents;
 	}
+	
 	void swapCrossover(int[][] array, int row1, int col1, int row2, int col2) {
 	    int temp = array[row1][col1];
 	    array[row1][col1] = array[row2][col2];
@@ -150,24 +228,26 @@ public class BinaryCodedGeneticAlgorithm {
 		return result;
 	}
 	
-	public int[][] crossover(int[][] crossover) {
+	public int[][] crossover(int[][] selection) {
 		double probabilityOfCrossover = 0.9;
 		Random random = new Random();
-		int[][] new1;
-		//ects as the value of crossover changes, the value of
-		// parents changes too
-		 new1=crossover;
+/**
+ * affects as the value of crossover changes, the value of parents changes too
+ * Solved by add copyArray
+ * array.clone only works on one dimensional array, it clone the index but can not change the sub object.
+ * In the essence, do not works for two dimensional array.(which is array contains other array)
+ */		
 		double randomProbability;
 		int i = 0;
 		int crossoverDigit;
-		int[][] copy= copyArray(crossover);
-		while (i < 6){
-			crossoverDigit=2;
-			//int crossoverDigit = random.nextInt(5) + 1;
+		int[][] copy= copyArray(selection);
+		while (i < copy.length){
+			//crossoverDigit=2;
+			crossoverDigit = random.nextInt(column-1) + 1;
 			randomProbability = random.nextDouble();
-			System.out.println(randomProbability);
+			//System.out.println(randomProbability);
 			if(randomProbability <= probabilityOfCrossover) {			
-				while (crossoverDigit < 6) {
+				while (crossoverDigit < copy[0].length) {
 					int h=i+1;
 					swapCrossover(copy, i, crossoverDigit, h, crossoverDigit);
 									
@@ -179,10 +259,50 @@ public class BinaryCodedGeneticAlgorithm {
 
 		return copy;
 	}
-
+	public int bitWise(int i){
+		if(i==0){
+			i=1;
+		}else{
+			i=0;
+		}
+		return i;
+	}
+	public int[][] mutation(int[][] crossover){
+		double mutationProbability= 0.05;
+		double randomProbability;
+		Random rand= new Random();
+		
+		int[][] result= copyArray(crossover);
+		for(int i=0; i<crossover.length;i++){
+			for(int j=0; j<crossover[i].length;j++){
+				randomProbability=rand.nextDouble();
+				
+				if(randomProbability<mutationProbability){
+					//System.out.println(i+" "+j+" "+ randomProbability);
+					result[i][j]=bitWise(result[i][j]);
+				}else{}
+			}
+		}
+		return result;
+	}
+	public void printDouble(double[] a){
+		for (int i = 0; i < a.length; i++) {
+			a[i]=round(a[i], precision, BigDecimal.ROUND_HALF_UP);
+			System.out.print(" " + a[i] + ",");
+			System.out.println();
+		}
+		System.out.println();
+	}
+	public void printInt(int[] a){
+		for (int i = 0; i < a.length; i++) {
+			System.out.print(" " + a[i] + ",");
+			System.out.println();
+		}
+		System.out.println();
+	}
 	public void print(int[][] a) {
-		for (int i = 0; i < 6; i++) {
-			for (int j = 0; j < 6; j++) {
+		for (int i = 0; i < a.length; i++) {
+			for (int j = 0; j < a[i].length; j++) {
 				System.out.print(" " + a[i][j] + ",");
 			}
 			System.out.println();
@@ -190,23 +310,126 @@ public class BinaryCodedGeneticAlgorithm {
 		System.out.println();
 		
 	}
-
+	public void printDoubleArray(double[][] a) {
+		for (int i = 0; i < a.length; i++) {
+			for (int j = 0; j < a[i].length; j++) {
+				a[i][j]=round(a[i][j], precision, BigDecimal.ROUND_HALF_UP);
+				System.out.print(" " + a[i][j] + ",");
+			}
+			System.out.println();
+		}
+		System.out.println();
+		
+	}
+	public static double round(double unrounded, int precision, int roundingMode)
+	{
+	    BigDecimal bd = new BigDecimal(unrounded);
+	    BigDecimal rounded = bd.setScale(precision, roundingMode);
+	    return rounded.doubleValue();
+	}
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		BinaryCodedGeneticAlgorithm test = new BinaryCodedGeneticAlgorithm();
 		// System.out.println(test.randomBinaryNumber());
-		int[][] testOfPool = new int[6][6];
+		int[][] testOfPool = new int[row][column];
 		testOfPool = test.generateMatingPool();
 		test.print(testOfPool);
-		testOfPool = test.crossover(testOfPool);
-		test.print(testOfPool);
-		Set<Integer> generated = new LinkedHashSet<Integer>();
-		generated=test.matingPair();
-		System.out.println(generated);
-		testOfPool = test.generateParents(testOfPool, generated);
-		test.print(testOfPool);
-		testOfPool = test.crossover(testOfPool);
-		test.print(testOfPool);
+		
+		int[][] decodedValueOfParameter= new int[row][numberOfParameters];
+		decodedValueOfParameter=test.decodedValueOfParameters(testOfPool);
+		System.out.println("dv x1,x2 = ");
+		//test.print(decodedValueOfParameter);
+		
+		double[][] finalDecodedValuesOfParameters= new double[row][numberOfParameters];
+		finalDecodedValuesOfParameters=test.returnFinalDecodedValuesOfParameters(decodedValueOfParameter);
+		System.out.println("dv in formula x1,x2 = ");
+		//test.printDoubleArray(finalDecodedValuesOfParameters);
+		
+		double[] valueOfFunction= new double[row];
+		valueOfFunction= test.returnValueOfFunction(finalDecodedValuesOfParameters);
+		System.out.println("Value of x1,x2 = ");
+		//test.printDouble(valueOfFunction);
+		
+		double[] valueOfCapitalFFunction= new double[row];
+		valueOfCapitalFFunction= test.returnValueOfCapitalFunction(valueOfFunction);
+		System.out.println("Value of F(x1,x2) = ");
+		//test.printDouble(valueOfCapitalFFunction);
+		
+		double average;
+		average=test.returnAverageValueOfCapitalFunction(valueOfCapitalFFunction);
+		average=round(average, precision, BigDecimal.ROUND_HALF_UP);
+		System.out.println("average f = " + average +"\n");
+		
+		double[] a = new double[row];
+		a=test.returnValueOfA(valueOfCapitalFFunction, average);
+		System.out.println("Value of A = ");
+		//test.printDouble(a);
+		
+		double[] b = new double[row];
+		b=test.returnValueOfB(a);
+		System.out.println("Value of B = ");
+		//test.printDouble(b);
+		
+		double[] c = new double[row];
+		c=test.returnValueOfC(b);
+		System.out.println("Value of C = ");
+		//test.printDouble(c);
+		
+		double[] d = new double[row];
+		d=test.returnValueOfD();
+		System.out.println("Value of D = ");
+		//test.printDouble(d);
+		
+		int[] e = new int[row];
+		e=test.returnValueOfE(d,c);
+		System.out.println("Value of E = ");
+		test.printInt(e);
+		
+		int[] f = new int[row];
+		f=test.returnValueOfF(e);
+		System.out.println("Value of F = ");
+		//test.printInt(f);
+		
+		int[][] mattingPool= new int[row][column];
+		mattingPool=test.generateParents(testOfPool, e);
+		System.out.println("Selection = ");
+		test.print(mattingPool);
+		
+		int[][] crossover= new int[row][column];
+		crossover=test.crossover(mattingPool);
+		System.out.println("After crossover = ");
+		test.print(crossover);
+		
+		int[][] mutation= new int[row][column];
+		mutation= test.mutation(crossover);
+		System.out.println("After Mutation =");
+		test.print(mutation);
+		
+		for(int i=1; i<N;i++){
+			testOfPool=test.copyArray(mutation);
+			System.out.println(i+"th Generation");
+			decodedValueOfParameter=test.decodedValueOfParameters(testOfPool);
+			finalDecodedValuesOfParameters=test.returnFinalDecodedValuesOfParameters(decodedValueOfParameter);
+			valueOfFunction= test.returnValueOfFunction(finalDecodedValuesOfParameters);
+			valueOfCapitalFFunction= test.returnValueOfCapitalFunction(valueOfFunction);
+			average=test.returnAverageValueOfCapitalFunction(valueOfCapitalFFunction);
+			average=round(average, precision, BigDecimal.ROUND_HALF_UP);
+			System.out.println("average f = " + average +"\n");
+			a=test.returnValueOfA(valueOfCapitalFFunction, average);
+			b=test.returnValueOfB(a);
+			c=test.returnValueOfC(b);
+			d=test.returnValueOfD();
+			e=test.returnValueOfE(d,c);
+			f=test.returnValueOfF(e);
+			mattingPool=test.generateParents(testOfPool, e);
+			crossover=test.crossover(mattingPool);
+			mutation= test.mutation(crossover);
+			
+			
+		}
+
+		//testOfPool = test.crossover(testOfPool);
+		//test.print(testOfPool);
 		// Random random = new Random();
 		// System.out.println(random.nextDouble());
 	}
